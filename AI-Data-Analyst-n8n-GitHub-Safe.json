@@ -1,0 +1,196 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi! I'm your AI Data Analyst. How can I assist you with your data today?",
+        "options": {
+          "allowFileUploads": false,
+          "inputPlaceholder": "Ask me anything about your sales data..",
+          "subtitle": "Ask questions abou your sales data, get insights, and send reports directly to Gmail.",
+          "title": "AI Data Analyst",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2c09bc3b-88ae-4979-b199-7c01fa0ae400",
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "EMAIL REPORT RULES:\n\nWhenever the user asks to send an analysis/report by Gmail:\n\n1. First use the Google Sheets tool to retrieve the latest data.\n2. Analyze the data accurately.\n3. Use the Gmail tool to send the result.\n4. The Gmail message MUST be valid HTML.\n5. Never send Markdown in the email.\n6. Never invent or modify values from the spreadsheet.\n\nUse this HTML structure:\n\n<h2>Report Title</h2>\n\n<p>Hello,</p>\n\n<p>A short introduction explaining what this report contains.</p>\n\n<h3>Analysis</h3>\n\n<ul>\n<li><strong>Point/Metric:</strong> Result</li>\n<li><strong>Point/Metric:</strong> Result</li>\n<li><strong>Point/Metric:</strong> Result</li>\n</ul>\n\n<h3>Key Insights</h3>\n\n<ul>\n<li>Important insight</li>\n<li>Important insight</li>\n<li>Additional insight</li>\n</ul>\n\n<p>Regards,<br>n8n Data Analyst AI</p>\n\nFORMATTING RULES:\n\n- Use <h2> for the main report title.\n- Use <h3> for section headings.\n- Use <p> for short paragraphs.\n- Use <ul> and <li> for bullet points.\n- Use <strong> for important numbers, totals, names, and values.\n- Keep the email clean and professional.\n- Do not create one long paragraph.\n- Preserve spreadsheet numbers exactly.\n- Return the email body as HTML when calling Gmail."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3f4392f8-1816-4bd6-a33d-da5d6c0ff972",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        208
+      ],
+      "id": "22319f4c-12e4-41a7-b124-32fbea3489c7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ],
+      "id": "1557108a-41f5-46f0-b50d-1b72f5b9907f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI_Data_Analyst_Sales_Data"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_GID_OR_NAME",
+          "mode": "list",
+          "cachedResultName": "Sales Data"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        208
+      ],
+      "id": "368424b5-98eb-4c0b-a69f-53388ea785be",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@example.com",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        144
+      ],
+      "id": "58e1cc40-359b-44c8-85d9-185f25f4a2bc",
+      "name": "Send a message in Gmail",
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
